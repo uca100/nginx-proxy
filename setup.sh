@@ -45,7 +45,17 @@ echo "==> [3/4] Deploying nginx site configs from $SITES_DIR..."
 
 sudo rm -f /etc/nginx/sites-enabled/default
 
+# Remove stale symlinks for configs no longer in sites/
 shopt -s nullglob
+for enabled in /etc/nginx/sites-enabled/*; do
+  name="$(basename "$enabled")"
+  [ "$name" = "default" ] && continue
+  if [ ! -f "$SITES_DIR/$name.conf" ]; then
+    echo "    [remove] stale config: $name"
+    sudo rm -f "$enabled" "/etc/nginx/sites-available/$name"
+  fi
+done
+
 configs=("$SITES_DIR"/*.conf)
 
 if [ ${#configs[@]} -eq 0 ]; then
