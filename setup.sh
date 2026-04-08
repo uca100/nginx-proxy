@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# nginx-proxy/setup.sh — master nginx + TLS setup for pi5.tail075174.ts.net
+# nginx-proxy/setup.sh — master nginx + TLS setup for myweb.tail075174.ts.net
 #
 # HOW TO ADD A NEW APP:
 #   1. Write your app's nginx.conf (use sites/alexa-gdrive.conf as template)
@@ -13,8 +13,8 @@
 # That's it. No changes to this script or any existing app needed.
 set -euo pipefail
 
-HOSTNAME="pi5.tail075174.ts.net"
-CERT_DIR="/etc/ssl/pi5"
+HOSTNAME="myweb.tail075174.ts.net"
+CERT_DIR="/etc/ssl/myweb"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SITES_DIR="$SCRIPT_DIR/sites"
 
