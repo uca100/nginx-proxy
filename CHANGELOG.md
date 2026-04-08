@@ -3,6 +3,20 @@
 ## 2026-04-08
 ### Added
 - `bootstrap.sh` — installs Tailscale with hostname `myweb` on new Ubuntu server (192.168.40.100)
+- Path-based routing: `/health` → health-os, `/alexa/` → alexa-gdrive (single port 443)
+- Tailscale Funnel configured on myweb (port 8080 internal → 443 external)
+
+### Changed
+- Migrated nginx from pi5 (192.168.40.99) to myweb (192.168.40.100); apps stay on pi5
+- Gunicorn bound to `0.0.0.0:5000` (was `127.0.0.1`) to allow cross-server proxying
+- Added `basePath: '/health'` to Next.js config; nginx rewrites `/api/` → `/health/api/` for health-os
+- Health-os API routes routed explicitly; all other `/api/` routes fall through to Flask (alexa)
+- `/health` redirects to `/health/dashboard`
+- nginx disabled on pi5 (no longer needed)
+
+### Fixed
+- Alexa skill POST endpoint: added exact `location = /alexa` to avoid redirect (Amazon doesn't follow redirects)
+- HTTPS redirect for `/health` was leaking internal port 8080 — now uses `https://$host` explicitly
 
 ### Changed
 - Migrated nginx reverse proxy from pi5 (192.168.40.99) to new dedicated server myweb (192.168.40.100)
