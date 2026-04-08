@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-04-08
+### Added
+- `bootstrap.sh` — installs Tailscale with hostname `myweb` on new Ubuntu server (192.168.40.100)
+
+### Changed
+- Migrated nginx reverse proxy from pi5 (192.168.40.99) to new dedicated server myweb (192.168.40.100)
+- Updated `setup.sh` hostname to `myweb.tail075174.ts.net`, cert dir to `/etc/ssl/myweb`
+- Updated `sites/alexa-gdrive.conf` — listen on `192.168.40.100:443`, proxy to `192.168.40.99:5000`
+- Updated `sites/health-os.conf` — listen on `192.168.40.100:8443`, proxy to `192.168.40.99:3000`
+- Apps remain on pi5; only the nginx proxy layer moved to myweb
+
 ## 2026-04-07 (session 2)
 ### Fixed
 - nginx now binds to LAN IP only (`192.168.40.99`) — avoids conflict with Tailscale Funnel (`tailscaled` owns 443/8443 on Tailscale IP)
