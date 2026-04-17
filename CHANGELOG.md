@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-04-17
+### Added
+- `deploy.sh` — placeholder script explaining manual deploy workflow
+
+### Fixed
+- Restored full `apps.conf` with all routes (myweb, health-os, morning-brief, lifeops, ytdl, argus, noc, kuma, alwayson)
+- Fixed nginx config on 192.168.40.100 (was serving default nginx page instead of apps.conf)
+
 ## 2026-04-08
 ### Added
 - `bootstrap.sh` — installs Tailscale with hostname `myweb` on new Ubuntu server (192.168.40.100)
