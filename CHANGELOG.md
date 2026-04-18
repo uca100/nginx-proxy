@@ -1,12 +1,18 @@
 # Changelog
 
-## 2026-04-17
+## [Unreleased] - 2026-04-18
+
+### Changed
+- `/backup/` route moved from port 3008 (unused) to myweb on port 3004
+- Added `/api/backup/` route pointing to myweb (3004), before Flask catch-all
+
+## [Unreleased] - 2026-04-17
 ### Added
-- `deploy.sh` — placeholder script explaining manual deploy workflow
+- `deploy.sh` — syncs nginx config to proxy and reloads nginx
+- `deploy-app.sh` — deploy new app: build, sync to pi5, open firewall port, print nginx route TODO
 
 ### Fixed
-- Restored full `apps.conf` with all routes (myweb, health-os, morning-brief, lifeops, ytdl, argus, noc, kuma, alwayson)
-- Fixed nginx config on 192.168.40.100 (was serving default nginx page instead of apps.conf)
+- Restored full `apps.conf` with all routes
 
 ## 2026-04-08
 ### Added
