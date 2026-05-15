@@ -12,7 +12,7 @@ echo "==> Deploying nginx config..."
 ssh "$PROXY_HOST" "
   sudo mv /tmp/nginx-apps.conf /etc/nginx/sites-available/myweb
   sudo ln -sf /etc/nginx/sites-available/myweb /etc/nginx/sites-enabled/myweb
-  sudo rm -f /etc/nginx/sites-enabled/default
+  sudo rm -f /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/apps.conf
   sudo nginx -t
   sudo systemctl reload nginx
 "
