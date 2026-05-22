@@ -1,5 +1,13 @@
 # Changelog
 
+
+## [Unreleased] - 2026-05-23
+
+### Added
+- install.sh: full idempotent setup script for fresh server restore
+- Mirrored to ~/projects/install-scripts/nginx-proxy.sh
+- Architecture diagram and folder structure added to Notion project page
+
 ## [Unreleased] - 2026-04-18
 
 ### Changed
