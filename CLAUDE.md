@@ -37,6 +37,12 @@ Public URL: `https://myweb.tail075174.ts.net`
 
 **Why:** A cached 301 with trailing slash caused Chrome to permanently redirect to `http://host:8080/path/` (the internal Funnel port) — unreachable from the browser. Safari and incognito were unaffected because they don't cache the same way. This took many sessions to diagnose.
 
+### One location block per app — no duplicates
+
+Never add multiple overlapping location blocks for the same app (e.g. `/trading-ibkr`, `/trading-ibkr/`, `/trading-ibkr/_next/`). Extra blocks conflict and route asset requests incorrectly, causing CSS/JS to 404 and the page to load blank.
+
+For Next.js apps with `basePath`, a single `location /myapp` block handles everything — the app serves all its assets under `/myapp/_next/...` automatically.
+
 ### Proxy directly — no redirect chains
 
 Do not use a redirect + separate proxy block pattern:
