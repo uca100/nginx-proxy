@@ -1,6 +1,12 @@
 # Changelog
 
 
+## [Unreleased] - 2026-06-13
+
+### Fixed
+- Removed 301 redirect from `/brief` → `/brief/` and consolidated to single no-slash location block (per routing rules)
+- Restarted `morning-brief.service` which was inactive (dead), causing 502 Bad Gateway on `/brief`
+
 ## [Unreleased] - 2026-05-23
 
 ### Added
