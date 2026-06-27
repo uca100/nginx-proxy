@@ -1,6 +1,11 @@
 # Changelog
 
 
+## [Unreleased] - 2026-06-27
+
+### Fixed
+- Added missing `/alwayson/terminal/pi4i/` nginx location block proxying to Pi5:7684 (Nomaglio server via Tailscale)
+
 ## [Unreleased] - 2026-06-13
 
 ### Fixed
