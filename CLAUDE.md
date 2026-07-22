@@ -127,9 +127,14 @@ Note: `proxy_pass http://192.168.40.99:PORT;` (NO trailing slash) — the full `
    ssh pi5 "sudo ufw allow from 192.168.40.100 to any port PORT proto tcp"
    ```
 
-5. **Add the app card to myweb** — see myweb/CLAUDE.md
+5. **Register in auth-gateway App Policies** — add to `KNOWN_APPS` in
+   `~/projects/auth-gateway/app.py` (`name` = first path segment, e.g. `/flights`
+   → `flights`). Then `cd ~/projects/auth-gateway && ./deploy.sh`. Without this
+   the app is nginx-gated but missing from `/auth/admin` → App Policies.
 
-6. **Update ARCHITECTURE.md** with the new port/app entry
+6. **Add the app card to myweb** — see myweb/CLAUDE.md
+
+7. **Update ARCHITECTURE.md** with the new port/app entry
 
 ---
 
