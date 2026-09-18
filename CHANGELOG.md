@@ -3,27 +3,35 @@
 
 ## [Unreleased] - 2026-09-18
 
-### Added
-- **`/photos/` → photofield photo library (pi5:3016), auth-gated.** photofield has no
-  built-in authentication and serves the entire family photo archive, so
-  `auth_request /auth/check` is the only thing protecting it.
-- photofield has no base-path support — the SPA references `/assets/`, `/favicon.ico`
-  and `/manifest.webmanifest` absolutely. Handled without rebuilding the app:
-  - trailing slash on `proxy_pass` strips the prefix, so `/photos/assets/x.js` →
-    `/assets/x.js` and `/photos/api/...` → `/api/...` both resolve in one block
-  - `sub_filter` rewrites those absolute paths in the served HTML (requires
-    `proxy_set_header Accept-Encoding ""` — `sub_filter` can't touch a gzipped body)
-  - the API base is read from the `photofield-api-host` cookie, set here to `/photos/api`
-  - verified the JS bundle contains no absolute `"/assets/` references, so HTML-only
-    rewriting is sufficient
-- `location = /photos` → 301 to `/photos/` so the prefix-stripping block applies.
+### Removed
+- **Reverted the `/photos/` → photofield route added earlier the same day.** It served a
+  blank page and cannot be made to work by proxying.
+  - The asset problem *was* solved (trailing-slash `proxy_pass` prefix strip +
+    `sub_filter` on the HTML + `photofield-api-host` cookie for the API base) — HTML,
+    JS (1,830,985 B byte-identical) and CSS all returned 200.
+  - The real blocker is **client-side**: photofield's Vue Router calls
+    `createWebHistory()` with no base and declares only `/`,
+    `/collections/:collectionId` and `/collections/:collectionId/:regionId`. Under a
+    `/photos` prefix the router matches nothing, renders an empty view, and issues zero
+    API calls. No server-side rewrite can fix this — the comparison happens in the
+    browser against the address bar, and `window.location` isn't writable.
+  - Upstream **SmilyOrg/photofield#103 "Support subpaths" is open since 2024-02-25**;
+    the maintainer states the app *requires deployment at the root of a (sub)domain*.
+- **Lesson: verifying that asset URLs resolve does not prove an SPA works under a
+  subpath.** Check the router base (`createWebHistory` argument / `basePath` / `<base>`)
+  before designing a prefix-stripping block.
+
+### Changed
+- photofield is now reached as a direct `http://192.168.40.99:3016` **service** link from
+  the myweb landing page, the same pattern as Pi-hole and Uptime Kuma, which are also
+  root-only web UIs.
 
 ### Security
-- Route verified to bounce unauthenticated requests on all paths — `/photos/`,
-  `/photos/api/collections` and `/photos/assets/*` all 302 to `/auth/login`.
-- **Known gap: `http://192.168.40.99:3016/` is still open to the LAN** (pi5 has no
-  firewall). Unlike every other app, photofield has no second line of defence. Fixing it
-  needs a `DOCKER-USER` rule, not ufw — see ARCHITECTURE.md.
+- **Consequence of the above: photofield is no longer behind the auth gateway.** It has
+  no login of its own, so the entire family photo archive is readable by anything on the
+  LAN. The previously proposed `DOCKER-USER` rule to block port 3016 is now mutually
+  exclusive with the landing-page link — applying it would break the only working route.
+  Accepted deliberately; revisit if the app ever moves to its own Tailscale hostname.
 
 ## [Unreleased] - 2026-06-27
 
