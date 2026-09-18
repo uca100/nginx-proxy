@@ -1,6 +1,30 @@
 # Changelog
 
 
+## [Unreleased] - 2026-09-18
+
+### Added
+- **`/photos/` → photofield photo library (pi5:3016), auth-gated.** photofield has no
+  built-in authentication and serves the entire family photo archive, so
+  `auth_request /auth/check` is the only thing protecting it.
+- photofield has no base-path support — the SPA references `/assets/`, `/favicon.ico`
+  and `/manifest.webmanifest` absolutely. Handled without rebuilding the app:
+  - trailing slash on `proxy_pass` strips the prefix, so `/photos/assets/x.js` →
+    `/assets/x.js` and `/photos/api/...` → `/api/...` both resolve in one block
+  - `sub_filter` rewrites those absolute paths in the served HTML (requires
+    `proxy_set_header Accept-Encoding ""` — `sub_filter` can't touch a gzipped body)
+  - the API base is read from the `photofield-api-host` cookie, set here to `/photos/api`
+  - verified the JS bundle contains no absolute `"/assets/` references, so HTML-only
+    rewriting is sufficient
+- `location = /photos` → 301 to `/photos/` so the prefix-stripping block applies.
+
+### Security
+- Route verified to bounce unauthenticated requests on all paths — `/photos/`,
+  `/photos/api/collections` and `/photos/assets/*` all 302 to `/auth/login`.
+- **Known gap: `http://192.168.40.99:3016/` is still open to the LAN** (pi5 has no
+  firewall). Unlike every other app, photofield has no second line of defence. Fixing it
+  needs a `DOCKER-USER` rule, not ufw — see ARCHITECTURE.md.
+
 ## [Unreleased] - 2026-06-27
 
 ### Fixed
