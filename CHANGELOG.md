@@ -40,6 +40,22 @@
     branch fires, without touching the live nginx.
 
 ### Added
+- **The watchdog now alerts to Telegram (NOC bot) whenever it takes a recovery action** —
+  DERP restart, Funnel re-enable, nginx restart, or a backend `4xx/5xx`. Previously it only
+  wrote to `/var/log/tailscale-watchdog.log`, which nothing read; that is precisely why
+  35,032 failed runs went unnoticed for four months.
+  - **Deduplicated**: a condition alerts on first occurrence, then at most once per 6 h
+    (`ALERT_REPEAT_SECS`) while it persists. Stamps live in `/var/lib/tailscale-watchdog/`
+    and are cleared on recovery, so a repeat failure alerts immediately. Without this a
+    stuck condition would send 288 messages/day and be muted within the hour.
+  - Secrets are read from `/usr/local/bin/watchdog-alert.env` (root-only, `600`), **not**
+    from this repo. Missing or unreadable env = silently no alerts, never a crash.
+  - Verified: dedup (5 consecutive failures → 1 message), clear-on-recovery, 6 h expiry,
+    and missing-env safety; plus one live send confirmed `HTTP 200` from the Telegram API.
+  - **Why alert on the action rather than adding an uptime poll:** the outages were ~3.5 s
+    every 300 s. A 60 s Uptime Kuma check would land inside one ~1.2% of the time — roughly
+    17 scattered blips a day, indistinguishable from noise. Alerting when the watchdog
+    *acts* catches the very first occurrence.
 - `tailscale-watchdog.sh` + `.service` + `.timer` are now **version-controlled here**.
   They previously existed only as root-owned files on tec, untracked anywhere — which
   is why a script restarting nginx every 5 minutes went unreviewed for four months.
