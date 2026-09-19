@@ -1,0 +1,8 @@
+[Unit]
+Description=Tailscale Funnel Watchdog
+After=tailscaled.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/tailscale-watchdog.sh
+User=root

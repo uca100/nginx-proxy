@@ -1,6 +1,36 @@
 # Changelog
 
 
+## [Unreleased] - 2026-09-19
+
+### Fixed
+- **`tailscale-watchdog.sh` restarted nginx every 5 minutes for four months.** Its
+  backend health check compared `curl` output against exactly `200`, but `/` returns
+  **302** (the auth gateway redirects to `/auth/login`), so the "backend is down"
+  branch fired on *every* run: `funnel reset` → `systemctl restart nginx` →
+  `funnel --bg`. The public `:443` listener disappeared for 3–4 s each cycle.
+  - Broke **2026-05-15T10:01Z**, the day `/` started redirecting. The watchdog log
+    shows the transition: last `OK — backend HTTP 200` at 09:55:52Z, first
+    `backend returned HTTP 302` at 10:01:10Z, then **35,032** consecutive failures.
+  - Fix: accept any 2xx/3xx as healthy (`! [[ "$HTTP_CODE" =~ ^[23] ]]`). A 302 from
+    an auth gateway means the backend is alive; `000` (timeout/refused) and 5xx still
+    trigger recovery.
+  - **Impact was not limited to nginx reloads** — it broke long-lived downloads for
+    every app behind the proxy. Diagnosed via alexa-gdrive, where 90-minute MP3
+    streams died with `MEDIA_ERROR_INVALID_REQUEST`: the Echo's Range re-requests
+    landed in a teardown window and never reached nginx, so *nothing was logged*.
+  - **Lesson: health checks must assert the property they care about (is the backend
+    reachable), not an incidental one (is the status exactly 200).** A recovery action
+    with a side effect as broad as `systemctl restart nginx` needs a check that cannot
+    false-positive, and the watchdog's own log should be alerted on — 35,032 identical
+    failures went unnoticed because nothing read it.
+
+### Added
+- `tailscale-watchdog.sh` + `.service` + `.timer` are now **version-controlled here**.
+  They previously existed only as root-owned files on tec, untracked anywhere — which
+  is why a script restarting nginx every 5 minutes went unreviewed for four months.
+
+
 ## [Unreleased] - 2026-09-18
 
 ### Removed
