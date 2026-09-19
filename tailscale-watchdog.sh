@@ -43,19 +43,26 @@ if ! echo "$FUNNEL_STATUS" | grep -q "Funnel on"; then
 else
     # ── 3. Funnel says on — verify backend actually responds ──────────────────
     HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://127.0.0.1:$FUNNEL_PORT/")
-    # 2xx and 3xx both mean the backend is alive — the auth gateway 302-redirects
-    # "/" to /auth/login, which is healthy. Only 5xx or 000 (timeout/refused) are
-    # real failures. Matching ==200 fired this branch on every run and restarted
-    # nginx every 5 min, cutting in-flight streams.
-    if ! [[ "$HTTP_CODE" =~ ^[23] ]]; then
-        log "Funnel active but backend returned HTTP $HTTP_CODE — resetting funnel and restarting nginx"
-        $TS_CMD funnel reset 2>/dev/null
-        sleep 1
+
+    if [[ "$HTTP_CODE" =~ ^[23] ]]; then
+        # 2xx and 3xx both mean the backend is alive — the auth gateway 302-redirects
+        # "/" to /auth/login, which is healthy. Asserting ==200 here fired the recovery
+        # branch on every run and restarted nginx every 5 min, cutting in-flight streams.
+        log "OK — Funnel active, backend HTTP $HTTP_CODE"
+
+    elif [ "$HTTP_CODE" = "000" ]; then
+        # curl could not connect at all — nginx is down or hung. This is the ONLY case
+        # that justifies a restart. The funnel is fine, so leave it alone: resetting it
+        # drops the public :443 listener and kills every in-flight request.
+        log "Backend unreachable (curl $HTTP_CODE) — restarting nginx"
         systemctl restart nginx
         sleep 2
-        $TS_CMD funnel --bg --yes "$FUNNEL_PORT"
-        log "Funnel re-enabled, nginx restarted"
+        AFTER=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://127.0.0.1:$FUNNEL_PORT/")
+        log "nginx restarted — backend now HTTP $AFTER"
+
     else
-        log "OK — Funnel active, backend HTTP $HTTP_CODE"
+        # 4xx/5xx: nginx is answering, so restarting it fixes nothing — a 5xx is an
+        # upstream app error. Record it and leave recovery to app-level monitoring.
+        log "WARN — backend HTTP $HTTP_CODE (nginx is up; not restarting)"
     fi
 fi

@@ -25,6 +25,20 @@
     false-positive, and the watchdog's own log should be alerted on — 35,032 identical
     failures went unnoticed because nothing read it.
 
+### Changed
+- **The watchdog no longer restarts nginx as a catch-all.** The recovery branch now
+  discriminates by failure mode instead of treating every non-200 the same:
+  - **2xx/3xx** → healthy, no action.
+  - **`000`** (curl could not connect) → nginx is genuinely down or hung; restart it and
+    log the resulting status. This is now the *only* path that restarts nginx, and it
+    leaves the funnel alone — resetting the funnel drops the public `:443` listener and
+    kills in-flight requests for no reason when the funnel was never the problem.
+  - **4xx/5xx** → nginx is answering, so restarting it fixes nothing (a 5xx is an
+    *upstream app* error). Log a `WARN` and leave recovery to app-level monitoring.
+  - Verified: decision tree exercised against 200/204/301/302/400/404/500/502/503/000 —
+    exactly one restart path; and a dry-run probe against a dead port confirmed the `000`
+    branch fires, without touching the live nginx.
+
 ### Added
 - `tailscale-watchdog.sh` + `.service` + `.timer` are now **version-controlled here**.
   They previously existed only as root-owned files on tec, untracked anywhere — which
